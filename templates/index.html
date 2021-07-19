@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="static/style.css">
+    <title>Document</title>
+</head>
+<body>
+    <header>
+        <img id="headerCasa"src="static/logoCasa.png">
+        <img id="headerMeknes" src="static/logoMeknes.png">
+        <img id="headerRabat" src="static/logoRabat.png">
+    </header>
+    <h1>plate-forme d'affectation aux ENSAMs</h1>
+    <nav>
+        <button class='btn' id="Results">Resultas du Concours</button>
+        <button class='btn' id="LPButton">Listes Principales</button>
+        <button class='btn' id="LAButton">Listes d'attentes</button>
+        <a href='downloadFiles' target="_blank"><button class='btn' id="LAButton">Télécharger les Listes</button></a> 
+    </nav>
+    <div id="RES" class="main">
+        <form id='uploadResultsForm' action="uploadResults" method="post" enctype="multipart/form-data">
+            <label for="uploadResultsBtn" class="btn">Importer Fichier .xlsx/.csv</label>
+            <input style="display: none;" id="uploadResultsBtn" type="file" name="results" onchange="form.submit()">
+        </form>
+        {% if results != 'NULL' %}
+        <table class="table">
+            <tr>
+                <th>CNE</th>
+                <th>Nom et Prenom</th>
+                <th>Choix 1</th>
+                <th>Choix 2</th>
+                <th>Choix 3</th>
+                <th>Moyenne</th>
+            </tr>
+
+            {% for result in results %}
+            <tr>
+                <td>{{ result.cne }}</td>
+                <td>{{ result.nomPrenom}}</td>
+                <td>{{ result.choix1}}</td>
+                <td>{{ result.choix2}}</td>
+                <td>{{ result.choix3}}</td>
+                <td>{{ result.moyenne}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+    </div>
+
+    <div id="LP" class="nodisp main">
+        <form id='genererLPForm' action="genererLP" method="post">
+            <div>
+                <label>Places disponibles Casablanca:
+                    <input class="maxInput" type="text" name="CASA_MAX_PLACES" onkeypress="validate(event)">
+                </label>
+
+                <label>Places disponibles Meknes:
+                    <input class="maxInput" type="text" name="MEKNES_MAX_PLACES" onkeypress="validate(event)">
+                </label>
+
+                <label>Places disponibles Rabat:
+                    <input class="maxInput" type="text" name="RABAT_MAX_PLACES" onkeypress="validate(event)">
+                </label>    
+            </div>
+            <label for="genererLPBtn" class="btn">Générer les listes principales</label>
+            <input style="display: none;" id="genererLPBtn" type="submit" name="genererLP">
+        </form>
+        <div class="tables">
+            {% if lp_casa != 'NULL' and lp_meknes != 'NULL' and lp_rabat !='NULL'%}
+            <nav>
+                {% if current_user.username == 'ENSAM_Casa' or current_user.username == 'admin' %} 
+                    <button class='btn' id="LPCasaButton">LP Casa</button>
+                {% endif %}
+
+                {% if current_user.username == 'ENSAM_Meknes' or current_user.username == 'admin' %} 
+                    <button class='btn' id="LPMeknesButton">LP Meknes</button>
+                {% endif %}
+
+                {% if current_user.username == 'ENSAM_Rabat' or current_user.username == 'admin' %} 
+                    <button class='btn' id="LPRabatButton">LP Rabat</button>
+                {% endif %}
+
+            </nav>
+            {% if current_user.username == 'ENSAM_Casa' or current_user.username == 'admin' %} 
+                <div id='lpCasa'>
+                    <form action="confirmStudents" method="post" id='confirmationFormCasa'></form>
+                    <table class="table">
+                        <tr>
+                            <th colspan="100%">Liste Principale Casablanca</th>
+                        </tr>
+                        <tr>
+                            <th>CNE</th>
+                            <th>Nom et Prenom</th>
+                            <th>Moyenne</th>
+                            <th>Confirmé</th>
+                        </tr>
+
+                        {% for row in lp_casa %}
+                        <tr>
+                            <td>{{ row.cne }}</td>
+                            <td>{{ row.nomPrenom }}</td>
+                            <td>{{ row.moyenne }}</td>
+                            <td><input form='confirmationFormCasa' type="checkbox" name="confirmedCasa" value={{ row.cne }} {{'checked' if row.confirmed == True else ''}}></td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    <label for="SubmitCasaBtn" class="btn">Confirmer</label>
+                    <input form='confirmationFormCasa' style="display: none;" id="SubmitCasaBtn" type="submit" name="submit" value="casa">
+                </div>
+            {% endif %}
+            
+            {% if current_user.username == 'ENSAM_Meknes' or current_user.username == 'admin' %} 
+                <div id="lpMeknes" class="nodisp">
+                    <form action="confirmStudents" method="post" id='confirmationFormMeknes'></form>
+                    <table class="table">
+                        <tr>
+                            <th colspan="100%">Liste Principale Meknes</th>
+                        </tr>
+                        <tr>
+                            <th>CNE</th>
+                            <th>Nom et Prenom</th>
+                            <th>Moyenne</th>
+                            <th>Confirmé</th>
+                        </tr>
+
+                        {% for row in lp_meknes %}
+                        <tr>
+                            <td>{{ row.cne }}</td>
+                            <td>{{ row.nomPrenom}}</td>
+                            <td>{{ row.moyenne}}</td>
+                            <td><input form='confirmationFormMeknes' type="checkbox" name="confirmedMeknes" value={{ row.cne }} {{'checked' if row.confirmed == True else ''}}></td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    <label for="SubmitMeknesBtn" class="btn">Confirmer</label>
+                    <input form='confirmationFormMeknes' style="display: none;" id="SubmitMeknesBtn" type="submit" name="submit" value="meknes">
+                </div>
+            {% endif %}
+
+            {% if current_user.username == 'ENSAM_Rabat' or current_user.username == 'admin' %} 
+                <div id="lpRabat" class="nodisp">
+                    <form action="confirmStudents" method="post" id='confirmationFormRabat'></form>
+                    <table class="table">
+                        <tr>
+                            <th colspan="100%">Liste Principale Rabat</th>
+                        </tr>
+                        <tr>
+                            <th>CNE</th>
+                            <th>Nom et Prenom</th>
+                            <th>Moyenne</th>
+                            <th>Confirmé</th>
+                        </tr>
+
+                        {% for row in lp_rabat %}
+                        <tr>
+                            <td>{{ row.cne }}</td>
+                            <td>{{ row.nomPrenom}}</td>
+                            <td>{{ row.moyenne}}</td>
+                            <td><input form='confirmationFormRabat' type="checkbox" name="confirmedRabat" value={{ row.cne }} id="" {{'checked' if row.confirmed == True else ''}}></td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    <label for="SubmitRabatBtn" class="btn">Confirmer</label>
+                    <input form='confirmationFormRabat' style="display: none;" id="SubmitRabatBtn" type="submit" name="submit" value="rabat">
+                </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <div id="LA" class="nodisp main">
+        <div class="tables">
+            {% if la_casa != 'NULL' and la_meknes != 'NULL' and la_rabat !='NULL'%}
+            <nav>
+                {% if current_user.username == 'ENSAM_Casa' or current_user.username == 'admin' %} 
+                    <button class='btn' id="LACasaButton">LA Casa</button>
+                {% endif %}
+
+                {% if current_user.username == 'ENSAM_Meknes' or current_user.username == 'admin' %} 
+                    <button class='btn' id="LAMeknesButton">LA Meknes</button>
+                {% endif %}
+
+                {% if current_user.username == 'ENSAM_Rabat' or current_user.username == 'admin' %} 
+                    <button class='btn' id="LARabatButton">LA Rabat</button>
+                {% endif %}
+
+            </nav>
+            {% if current_user.username == 'ENSAM_Casa' or current_user.username == 'admin' %} 
+                <div id='laCasa'>
+                    <table class="table">
+                        <tr>
+                            <th colspan="100%">Liste d'Attente Casablanca</th>
+                        </tr>
+                        <tr>
+                            <th>CNE</th>
+                            <th>Nom et Prenom</th>
+                            <th>Moyenne</th>
+                        </tr>
+
+                        {% for row in la_casa %}
+                        <tr>
+                            <td>{{ row.cne }}</td>
+                            <td>{{ row.nomPrenom }}</td>
+                            <td>{{ row.moyenne }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            {% endif %}
+            
+            {% if current_user.username == 'ENSAM_Meknes' or current_user.username == 'admin' %} 
+                <div id="laMeknes" class="nodisp">
+                    <table class="table">
+                        <tr>
+                            <th colspan="100%">Liste d'Attente Meknes</th>
+                        </tr>
+                        <tr>
+                            <th>CNE</th>
+                            <th>Nom et Prenom</th>
+                            <th>Moyenne</th>
+                        </tr>
+
+                        {% for row in la_meknes %}
+                        <tr>
+                            <td>{{ row.cne }}</td>
+                            <td>{{ row.nomPrenom}}</td>
+                            <td>{{ row.moyenne}}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            {% endif %}
+
+            {% if current_user.username == 'ENSAM_Rabat' or current_user.username == 'admin' %} 
+                <div id="laRabat" class="nodisp">
+                    <table class="table">
+                        <tr>
+                            <th colspan="100%">Liste d'Attente Rabat</th>
+                        </tr>
+                        <tr>
+                            <th>CNE</th>
+                            <th>Nom et Prenom</th>
+                            <th>Moyenne</th>
+                        </tr>
+
+                        {% for row in la_rabat %}
+                        <tr>
+                            <td>{{ row.cne }}</td>
+                            <td>{{ row.nomPrenom}}</td>
+                            <td>{{ row.moyenne}}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</body>
+<script src="static/script.js"></script>
+</html>
